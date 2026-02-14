@@ -7,10 +7,16 @@ MODEL_PATH = os.path.join(BASE_DIR, "models", "nfl_model.pkl")
 
 model = joblib.load(MODEL_PATH)
 
-def predict_game(home_last5_pts, away_last5_pts, home_elo, away_elo):
+def predict_game(home_last5_pts, away_last5_pts, home_elo, away_elo, elo_diff):
     df = pd.DataFrame(
-        [[home_last5_pts, away_last5_pts, home_elo, away_elo]],
-        columns=["home_last5_pts", "away_last5_pts", "home_elo", "away_elo"]
+        [[home_last5_pts, away_last5_pts, home_elo, away_elo, elo_diff]],
+        columns=[
+            "home_last5_pts",
+            "away_last5_pts",
+            "home_elo",
+            "away_elo",
+            "elo_diff"
+        ]
     )
     prob = model.predict_proba(df)[0][1]
     return prob
