@@ -5,6 +5,10 @@ from dotenv import load_dotenv
 from discord.ext import commands
 from discord import app_commands
 from predict_nfl import predict_game
+from db import engine
+from models import Base
+
+Base.metadata.create_all(bind=engine)
 
 load_dotenv()  # loads local .env if present (for your PC)
 
@@ -22,6 +26,7 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+print("DB:", os.getenv("DATABASE_URL"))
 
 # Sync commands
 @bot.event
@@ -47,36 +52,39 @@ def fetch_today_games():
 
 @bot.tree.command(name="nfl_predictions", description="Get NFL predictions for today")
 async def nfl_predictions(interaction: discord.Interaction):
-    await interaction.response.defer()
+    await interaction.response.defer(thinking=True)
 
-    games = fetch_today_games()
+    try:
+        games = fetch_today_games()
 
-    if not games:
-        await interaction.followup.send("No games today.")
-        return
+        if not games:
+            await interaction.followup.send("No games today.")
+            return
 
-    embed = discord.Embed(
-        title="🔥 Nova NFL Predictions",
-        color=discord.Color.red()
-    )
-
-    for g in games:
-        # Replace with real live feature pipeline later
-        prob = predict_game(
-    24, 21,
-    20, 23
-)
-
-
-        color_emoji = "🟢" if prob > 0.6 else "🟡" if prob > 0.5 else "🔴"
-
-        embed.add_field(
-            name=f"{g['home']} vs {g['away']}",
-            value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%",
-            inline=False
+        embed = discord.Embed(
+            title="🔥 Nova NFL Predictions",
+            color=discord.Color.red()
         )
 
-    await interaction.followup.send(embed=embed)
+        for g in games:
+            prob = predict_game(
+                24, 21,
+                20, 23
+            )
+
+            color_emoji = "🟢" if prob > 0.6 else "🟡" if prob > 0.5 else "🔴"
+
+            embed.add_field(
+                name=f"{g['home']} vs {g['away']}",
+                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%",
+                inline=False
+            )
+
+        await interaction.followup.send(embed=embed)
+
+    except Exception as e:
+        print("Command error:", e)
+        await interaction.followup.send("Something went wrong.")
 
 
 bot.run(TOKEN)
