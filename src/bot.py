@@ -37,9 +37,12 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 print("DB:", os.getenv("DATABASE_URL"))
 
 # Sync commands
+GUILD_ID = 1472040289802911962 # replace with your server ID
+
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
+    guild = discord.Object(id=GUILD_ID)
+    await bot.tree.sync(guild=guild)
     print(f"Nova is online as {bot.user}")
 
 def has_active_subscription(user):
@@ -68,7 +71,7 @@ def fetch_today_games():
         games.append({"home": home, "away": away})
     return games
 
-@bot.tree.command(name="login")
+@bot.tree.command(name="login", guild=discord.Object(id=GUILD_ID))
 async def login(interaction, key: str):
 
     db = SessionLocal()
@@ -110,7 +113,7 @@ async def login(interaction, key: str):
     )
 
 
-@bot.tree.command(name="nfl_predictions", description="Get NFL predictions for today")
+@bot.tree.command(name="nfl_predictions", description="Get NFL predictions for today!", guild=discord.Object(id=GUILD_ID))
 async def nfl_predictions(interaction: discord.Interaction):
 
     db = SessionLocal()
@@ -158,7 +161,7 @@ async def nfl_predictions(interaction: discord.Interaction):
 
 YOUR_DISCORD_ID = 1064643686257918022  # replace with yours
 
-@bot.tree.command(name="generate_key")
+@bot.tree.command(name="generate_key", guild=discord.Object(id=GUILD_ID))
 async def generate_key(interaction, plan: str):
     if interaction.user.id != YOUR_DISCORD_ID:
         await interaction.response.send_message("Not authorized.", ephemeral=True)
