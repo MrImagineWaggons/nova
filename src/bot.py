@@ -6,14 +6,11 @@ from discord.ext import commands
 from discord import app_commands
 from predict_nfl import predict_game
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ENV_PATH = os.path.join(BASE_DIR, ".env")
+load_dotenv()  # loads local .env if present (for your PC)
 
-print("Looking for .env at:", ENV_PATH)
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
-load_dotenv(ENV_PATH)
-
-print("Loaded token:", os.getenv("DISCORD_BOT_TOKEN"))
+print("Token exists:", bool(TOKEN))
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
