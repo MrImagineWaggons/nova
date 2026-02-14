@@ -7,8 +7,12 @@ from discord import app_commands
 from predict_nfl import predict_game
 from db import engine
 from models import Base
+from sqlalchemy import inspect
 
 Base.metadata.create_all(bind=engine)
+
+inspector = inspect(engine)
+print("TABLES:", inspector.get_table_names())
 
 load_dotenv()  # loads local .env if present (for your PC)
 
