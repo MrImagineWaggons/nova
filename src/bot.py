@@ -63,10 +63,10 @@ async def nfl_predictions(interaction: discord.Interaction):
     for g in games:
         # Replace with real live feature pipeline later
         prob = predict_game(
-            24, 21,
-            20, 23,
-            50  # elo_diff
-        )
+    24, 21,
+    20, 23
+)
+
 
         color_emoji = "🟢" if prob > 0.6 else "🟡" if prob > 0.5 else "🔴"
 
