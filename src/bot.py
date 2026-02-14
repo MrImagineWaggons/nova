@@ -41,9 +41,22 @@ GUILD_ID = 1472040289802911962 # replace with your server ID
 
 @bot.event
 async def on_ready():
-    guild = discord.Object(id=GUILD_ID)
+    guild = discord.Object(id=YOUR_GUILD_ID)
+
+    # Clear global commands
+    bot.tree.clear_commands(guild=None)
+    await bot.tree.sync()
+
+    # Clear guild commands
+    bot.tree.clear_commands(guild=guild)
     await bot.tree.sync(guild=guild)
-    print(f"Nova is online as {bot.user}")
+
+    # Resync only to guild
+    bot.tree.copy_global_to(guild=guild)
+    await bot.tree.sync(guild=guild)
+
+    print(f"Logged in as {bot.user}")
+
 
 def has_active_subscription(user):
     if not user.plan_type:
