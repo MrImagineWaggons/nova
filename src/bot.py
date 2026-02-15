@@ -14,7 +14,10 @@ from license import generate_license_key
 from models import LicenseKey
 from db import SessionLocal
 from nfl_model import calculate_win_probability
+from odds import get_moneyline_odds
+from nfl_model import calculate_ev
 
+BANNER_URL = "https://imgur.com/a/NKZNlqN"
 
 Base.metadata.create_all(bind=engine)
 
@@ -263,12 +266,24 @@ async def nfl_predictions(interaction: discord.Interaction):
             db.close()
             return
 
+        # 🔴 Premium Red Theme
         embed = discord.Embed(
-            title="🔥 Nova NFL Predictions",
-            color=discord.Color.red()
+            title="★ NOVA INTELLIGENCE NFL REPORT ★",
+            description="*Precision beats luck. Data beats emotion.*",
+            color=0x8B0000
         )
 
+        # User Display
+        embed.set_author(
+            name=f"{interaction.user.display_name}'s Betting Dashboard",
+            icon_url=interaction.user.display_avatar.url
+        )
+
+        # Star Banner
+        embed.set_image(url=BANNER_URL)
+
         for g in games:
+
             prob = calculate_win_probability(
                 g["home_ppg"],
                 g["home_allowed"],
@@ -277,13 +292,65 @@ async def nfl_predictions(interaction: discord.Interaction):
                 home_field=True
             )
 
-            color_emoji = "🟢" if prob > 0.6 else "🟡" if prob > 0.5 else "🔴"
-            
+            odds_data = get_moneyline_odds(g["home"], g["away"])
+
+            home_odds = None
+            away_odds = None
+            home_ev = None
+            away_ev = None
+
+            if odds_data:
+                home_odds = odds_data.get(g["home"])
+                away_odds = odds_data.get(g["away"])
+
+            if home_odds:
+                home_ev = calculate_ev(prob, home_odds)
+
+            if away_odds:
+                away_ev = calculate_ev(1 - prob, away_odds)
+
+            # Determine Best Play
+            best_pick = "No Positive EV Edge"
+            ev_display = "N/A"
+
+            if home_ev and home_ev > 0:
+                best_pick = f"{g['home']} Moneyline ({home_odds})"
+                ev_display = f"+{round(home_ev*100,2)}%"
+            elif away_ev and away_ev > 0:
+                best_pick = f"{g['away']} Moneyline ({away_odds})"
+                ev_display = f"+{round(away_ev*100,2)}%"
+
+            # Confidence Logic
+            if prob >= 0.65:
+                confidence = "High Confidence"
+                risk = "Low Risk / Lower Payout"
+                indicator = "🟢"
+            elif prob >= 0.55:
+                confidence = "Moderate Confidence"
+                risk = "Balanced Risk"
+                indicator = "🟡"
+            else:
+                confidence = "High Variance"
+                risk = "Higher Risk / Higher Reward"
+                indicator = "🔴"
+
             embed.add_field(
-                name=f"{g['home']} vs {g['away']}",
-                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%",
+                name=f"{indicator} {g['home']} vs {g['away']}",
+                value=(
+                    f"📊 **Model Win Probability:** {prob*100:.1f}%\n\n"
+                    f"💰 **Sportsbook Line:** {home_odds if home_odds else 'N/A'} / {away_odds if away_odds else 'N/A'}\n\n"
+                    f"🎯 **Official Play (Sportsbook Format):**\n"
+                    f"➡️ {best_pick}\n\n"
+                    f"🧠 **Confidence:** {confidence}\n"
+                    f"⚖️ **Risk Profile:** {risk}\n"
+                    f"📈 **Expected Value (EV):** {ev_display}"
+                ),
                 inline=False
             )
+
+        embed.set_footer(
+            text="Moneyline = Pick team to win outright | EV = Positive expected profit over time"
+        )
 
         await interaction.followup.send(embed=embed)
 
