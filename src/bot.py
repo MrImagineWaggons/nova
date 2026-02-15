@@ -17,7 +17,7 @@ from nfl_model import calculate_win_probability
 from odds import get_moneyline_odds
 from nfl_model import calculate_ev
 
-BANNER_URL = "https://imgur.com/a/NKZNlqN"
+BANNER_URL = "https://cdn.discordapp.com/attachments/1105664211255820428/1472473158199017512/Starlogo.png?ex=6992b2fe&is=6991617e&hm=c27702c4694d0f0560b9b8808e463cd84193710d02ac3addebce07f4c4441ea8"
 
 Base.metadata.create_all(bind=engine)
 
@@ -268,19 +268,23 @@ async def nfl_predictions(interaction: discord.Interaction):
 
         # 🔴 Premium Red Theme
         embed = discord.Embed(
-            title="★ NOVA INTELLIGENCE NFL REPORT ★",
-            description="*Precision beats luck. Data beats emotion.*",
-            color=0x8B0000
+            title="★ STAR PREDICTOR — NFL EDGE REPORT ★",
+            description="Data > Emotion • Long-term EV > Short-term hype",
+            color=0xB11226
         )
 
+        embed.set_image(url=BANNER_URL)
+        
+        embed.set_author(
+            name=f"{interaction.user.display_name}'s STAR Dashboard",
+            icon_url=interaction.user.display_avatar.url
+        )
+      
         # User Display
         embed.set_author(
             name=f"{interaction.user.display_name}'s Betting Dashboard",
             icon_url=interaction.user.display_avatar.url
         )
-
-        # Star Banner
-        embed.set_image(url=BANNER_URL)
 
         for g in games:
 
@@ -334,16 +338,26 @@ async def nfl_predictions(interaction: discord.Interaction):
                 risk = "Higher Risk / Higher Reward"
                 indicator = "🔴"
 
+            color_explain = {"🟢": "Strong edge detected",
+                             "🟡": "Moderate edge",
+                            "🔴": "High variance / upset potential"
+                    }
+
             embed.add_field(
                 name=f"{indicator} {g['home']} vs {g['away']}",
                 value=(
-                    f"📊 **Model Win Probability:** {prob*100:.1f}%\n\n"
-                    f"💰 **Sportsbook Line:** {home_odds if home_odds else 'N/A'} / {away_odds if away_odds else 'N/A'}\n\n"
-                    f"🎯 **Official Play (Sportsbook Format):**\n"
+                    f"📊 **Model Projection:** {g['home']} win probability {prob*100:.1f}%\n"
+                    f"🎨 Indicator Meaning: {color_explain[indicator]}\n\n"
+                    
+                    f"💰 **Sportsbook Moneyline (FanDuel/DK Format)**\n"
+                    f"• {g['home']}: {home_odds if home_odds else 'N/A'}\n"
+                    f"• {g['away']}: {away_odds if away_odds else 'N/A'}\n\n"
+                    
+                     f"🔥 **Official STAR Pick:**\n"
                     f"➡️ {best_pick}\n\n"
-                    f"🧠 **Confidence:** {confidence}\n"
-                    f"⚖️ **Risk Profile:** {risk}\n"
-                    f"📈 **Expected Value (EV):** {ev_display}"
+                    f"📈 Expected Value (EV): {ev_display}\n"
+                    f"🧠 Confidence Level: {confidence}\n"
+                    f"⚖️ Risk–Reward: {risk}"
                 ),
                 inline=False
             )
