@@ -18,10 +18,7 @@ class LicenseKey(Base):
     __tablename__ = "license_keys"
 
     id = Column(Integer, primary_key=True, index=True)
-    key_value = Column(String, unique=True, index=True, nullable=False)
-    plan_type = Column(String, nullable=False)
-    duration_days = Column(Integer, nullable=False)
-
+    key_value = Column(String, unique=True, index=True)
+    plan_type = Column(String)
+    duration_days = Column(Integer)
     bound_discord_id = Column(String, nullable=True)
-
-    created_at = Column(DateTime, default=datetime.utcnow)

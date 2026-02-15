@@ -13,6 +13,7 @@ from sqlalchemy import inspect
 from license import generate_license_key
 from models import LicenseKey
 from db import SessionLocal
+
 Base.metadata.create_all(bind=engine)
 
 inspector = inspect(engine)
@@ -41,17 +42,14 @@ GUILD_ID = 1472040289802911962 # replace with your server ID
 
 @bot.event
 async def on_ready():
-    guild = discord.Object(id=YOUR_GUILD_ID)
+    guild = discord.Object(id=GUILD_ID)
 
-    # Clear global commands
     bot.tree.clear_commands(guild=None)
     await bot.tree.sync()
 
-    # Clear guild commands
     bot.tree.clear_commands(guild=guild)
     await bot.tree.sync(guild=guild)
 
-    # Resync only to guild
     bot.tree.copy_global_to(guild=guild)
     await bot.tree.sync(guild=guild)
 
