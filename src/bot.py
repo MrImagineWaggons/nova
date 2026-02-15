@@ -281,7 +281,7 @@ async def nfl_predictions(interaction: discord.Interaction):
             
             embed.add_field(
                 name=f"{g['home']} vs {g['away']}",
-                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%"
+                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%",
                 inline=False
             )
 
