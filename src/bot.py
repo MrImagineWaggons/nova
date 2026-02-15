@@ -121,6 +121,41 @@ async def status(interaction: discord.Interaction):
 
     db.close()
 
+@bot.tree.command(name="reset_user", guild=discord.Object(id=GUILD_ID))
+async def reset_user(interaction: discord.Interaction, target: discord.User):
+
+    if interaction.user.id != YOUR_DISCORD_ID:
+        await interaction.response.send_message("Not authorized.", ephemeral=True)
+        return
+
+    await interaction.response.defer(ephemeral=True)
+
+    db = SessionLocal()
+
+    user = db.query(User).filter_by(discord_id=str(target.id)).first()
+
+    if not user:
+        await interaction.followup.send("User not found in database.")
+        db.close()
+        return
+
+    # Unbind any license key tied to this user
+    keys = db.query(LicenseKey).filter_by(bound_discord_id=str(target.id)).all()
+
+    for key in keys:
+        key.bound_discord_id = None
+
+    # Reset user subscription
+    user.plan_type = None
+    user.expires_at = None
+
+    db.commit()
+    db.close()
+
+    await interaction.followup.send(
+        f"✅ Reset subscription for {target.name}."
+    )
+
 # ESPN Fetch
 def fetch_today_games():
     url = "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
