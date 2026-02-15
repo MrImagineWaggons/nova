@@ -12,18 +12,14 @@ from license import generate_license_key
 from nfl_model import calculate_win_probability, calculate_ev
 from odds import get_moneyline_odds
 
-# =========================
-# CONFIG
-# =========================
-
 BANNER_URL = "https://cdn.discordapp.com/attachments/1105664211255820428/1472473158199017512/Starlogo.png?ex=6992b2fe&is=6991617e&hm=c27702c4694d0f0560b9b8808e463cd84193710d02ac3addebce07f4c4441ea8"
 
 GUILD_ID = 1472040289802911962
 YOUR_DISCORD_ID = 1064643686257918022
-
-# =========================
-# SETUP
-# =========================
+ALLOWED_ADMIN_IDS = {
+    1064643686257918022,  
+    1102771558411423794    
+}
 
 Base.metadata.create_all(bind=engine)
 inspector = inspect(engine)
@@ -182,11 +178,42 @@ async def show_predict_menu(interaction):
         view=view
     )
 
-
 @bot.event
 async def on_ready():
     await bot.tree.sync(guild=discord.Object(id=GUILD_ID))
     print(f"Logged in as {bot.user}")
+
+@bot.tree.command(name="genkey", guild=discord.Object(id=GUILD_ID))
+async def genkey(interaction: discord.Interaction, plan: str, days: int):
+
+    if interaction.user.id not in ALLOWED_ADMIN_IDS:
+        await interaction.response.send_message(
+            "Not authorized.",
+            ephemeral=True
+        )
+        return
+
+    await interaction.response.defer(ephemeral=True)
+
+    db = SessionLocal()
+
+    key_value = generate_license_key()
+
+    new_key = LicenseKey(
+        key_value=key_value,
+        plan_type=plan.lower(),
+        duration_days=days,
+        bound_discord_id=None
+    )
+
+    db.add(new_key)
+    db.commit()
+    db.close()
+
+    await interaction.followup.send(
+        f"🔑 Key Generated:\n`{key_value}`\nPlan: {plan}\nDuration: {days} days",
+        ephemeral=True
+    )
 
 
 @bot.tree.command(name="menu", guild=discord.Object(id=GUILD_ID))
