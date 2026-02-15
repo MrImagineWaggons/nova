@@ -13,6 +13,8 @@ from sqlalchemy import inspect
 from license import generate_license_key
 from models import LicenseKey
 from db import SessionLocal
+from nfl_model import calculate_win_probability
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -163,11 +165,33 @@ def fetch_today_games():
     data = resp.json()
 
     games = []
+
     for event in data.get("events", []):
         comp = event["competitions"][0]
-        home = comp["competitors"][0]["team"]["displayName"]
-        away = comp["competitors"][1]["team"]["displayName"]
-        games.append({"home": home, "away": away})
+
+        home_team = comp["competitors"][0]
+        away_team = comp["competitors"][1]
+
+        home_name = home_team["team"]["displayName"]
+        away_name = away_team["team"]["displayName"]
+
+        # Extract basic stats if available
+        try:
+            home_score = int(home_team.get("score", 0))
+            away_score = int(away_team.get("score", 0))
+        except:
+            home_score = 21
+            away_score = 21
+
+        games.append({
+            "home": home_name,
+            "away": away_name,
+            "home_ppg": home_score + 20,   # placeholder baseline
+            "away_ppg": away_score + 20,
+            "home_allowed": 20,
+            "away_allowed": 20
+        })
+
     return games
 
 @bot.tree.command(name="login", guild=discord.Object(id=GUILD_ID))
@@ -245,13 +269,19 @@ async def nfl_predictions(interaction: discord.Interaction):
         )
 
         for g in games:
-            prob = predict_game(24, 21, 20, 23)
+            prob = calculate_win_probability(
+                g["home_ppg"],
+                g["home_allowed"],
+                g["away_ppg"],
+                g["away_allowed"],
+                home_field=True
+            )
 
             color_emoji = "🟢" if prob > 0.6 else "🟡" if prob > 0.5 else "🔴"
-
+            
             embed.add_field(
                 name=f"{g['home']} vs {g['away']}",
-                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%",
+                value=f"{color_emoji} Home Win Probability: {prob*100:.1f}%"
                 inline=False
             )
 
