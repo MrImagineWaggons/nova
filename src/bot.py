@@ -197,7 +197,7 @@ async def genkey(interaction: discord.Interaction, plan: str, days: int):
 
     db = SessionLocal()
 
-    key_value = generate_license_key()
+    key_value = generate_license_key(plan)  # ← FIXED
 
     new_key = LicenseKey(
         key_value=key_value,
