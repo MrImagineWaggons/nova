@@ -1,5 +1,5 @@
 from models import Base, User, LicenseKey
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 import discord
 import requests
@@ -51,16 +51,75 @@ async def on_ready():
 
 
 def has_active_subscription(user):
-    if not user.plan_type:
+    if not user.plan_type or not user.expires_at:
         return False
 
-    if not user.expires_at:
-        return False
+    now = datetime.now(timezone.utc)
 
-    if datetime.utcnow() > user.expires_at:
-        return False
+    # Ensure expires_at is timezone aware
+    if user.expires_at.tzinfo is None:
+        expires = user.expires_at.replace(tzinfo=timezone.utc)
+    else:
+        expires = user.expires_at
 
-    return True
+    return now < expires
+
+@bot.tree.command(name="status", guild=discord.Object(id=GUILD_ID))
+async def status(interaction: discord.Interaction):
+
+    await interaction.response.defer(ephemeral=True)
+
+    db = SessionLocal()
+
+    user = db.query(User).filter_by(discord_id=str(interaction.user.id)).first()
+
+    if not user or not user.plan_type:
+        await interaction.followup.send("❌ You do not have an active subscription.")
+        db.close()
+        return
+
+    now = datetime.now(timezone.utc)
+
+    expires = user.expires_at
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+
+    remaining = expires - now
+
+    if remaining.total_seconds() <= 0:
+        await interaction.followup.send("⚠️ Your subscription has expired.")
+        db.close()
+        return
+
+    days = remaining.days
+    hours = remaining.seconds // 3600
+
+    embed = discord.Embed(
+        title="📊 Subscription Status",
+        color=discord.Color.green()
+    )
+
+    embed.add_field(
+        name="Plan",
+        value=user.plan_type.upper(),
+        inline=False
+    )
+
+    embed.add_field(
+        name="Expires",
+        value=expires.strftime("%Y-%m-%d %H:%M UTC"),
+        inline=False
+    )
+
+    embed.add_field(
+        name="Time Remaining",
+        value=f"{days} days, {hours} hours",
+        inline=False
+    )
+
+    await interaction.followup.send(embed=embed)
+
+    db.close()
 
 # ESPN Fetch
 def fetch_today_games():
