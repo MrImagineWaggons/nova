@@ -77,19 +77,21 @@ def fetch_today_games():
     return games
 
 @bot.tree.command(name="login", guild=discord.Object(id=GUILD_ID))
-async def login(interaction, key: str):
+async def login(interaction: discord.Interaction, key: str):
+
+    await interaction.response.defer(ephemeral=True)
 
     db = SessionLocal()
 
     license_key = db.query(LicenseKey).filter_by(key_value=key).first()
 
     if not license_key:
-        await interaction.response.send_message("Invalid key.", ephemeral=True)
+        await interaction.followup.send("Invalid key.", ephemeral=True)
         db.close()
         return
 
     if license_key.bound_discord_id:
-        await interaction.response.send_message("Key already used.", ephemeral=True)
+        await interaction.followup.send("Key already used.", ephemeral=True)
         db.close()
         return
 
@@ -110,10 +112,14 @@ async def login(interaction, key: str):
     license_key.bound_discord_id = str(interaction.user.id)
 
     db.commit()
+
+    plan_type = user.plan_type
+    expires_at = user.expires_at
+
     db.close()
 
-    await interaction.response.send_message(
-        f"✅ {user.plan_type.upper()} plan activated!\nExpires: {user.expires_at}",
+    await interaction.followup.send(
+        f"✅ {plan_type.upper()} plan activated!\nExpires: {expires_at}",
         ephemeral=True
     )
 
