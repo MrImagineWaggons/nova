@@ -273,7 +273,7 @@ async def nfl_predictions(interaction: discord.Interaction):
             color=0xB11226
         )
 
-        embed.set_image(url=BANNER_URL)
+        embed.set_thumbnail(url=BANNER_URL)
         
         embed.set_author(
             name=f"{interaction.user.display_name}'s STAR Dashboard",
@@ -363,7 +363,7 @@ async def nfl_predictions(interaction: discord.Interaction):
             )
 
         embed.set_footer(
-            text="Moneyline = Pick team to win outright | EV = Positive expected profit over time"
+            text="Moneyline = Pick team to win outright • EV = Expected profit over time • Bet responsibly"
         )
 
         await interaction.followup.send(embed=embed)
