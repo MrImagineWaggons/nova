@@ -44,16 +44,10 @@ GUILD_ID = 1472040289802911962 # replace with your server ID
 async def on_ready():
     guild = discord.Object(id=GUILD_ID)
 
-    bot.tree.clear_commands(guild=None)
-    await bot.tree.sync()
-
-    bot.tree.clear_commands(guild=guild)
-    await bot.tree.sync(guild=guild)
-
-    bot.tree.copy_global_to(guild=guild)
     await bot.tree.sync(guild=guild)
 
     print(f"Logged in as {bot.user}")
+    print("Slash commands synced to guild.")
 
 
 def has_active_subscription(user):
