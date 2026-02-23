@@ -26,8 +26,10 @@ def american_to_implied_prob(odds):
         return abs(odds) / (abs(odds) + 100)
 
 
-def calculate_ev(model_prob, american_odds):
-    implied = american_to_implied_prob(american_odds)
-    payout = abs(american_odds) / 100 if american_odds > 0 else 100 / abs(american_odds)
-    ev = (model_prob * payout) - (1 - model_prob)
-    return round(ev, 4)
+def calculate_ev(prob, american_odds):
+    if american_odds > 0:
+        decimal = 1 + (american_odds / 100)
+    else:
+        decimal = 1 + (100 / abs(american_odds))
+
+    return (prob * decimal) - 1
